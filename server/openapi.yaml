@@ -1,0 +1,325 @@
+openapi: 3.1.0
+info:
+  title: RelationBoat API
+  version: 0.1.0
+servers:
+  - url: https://relationboat.kro.kr/api/v1
+  - url: http://localhost:3000/api/v1
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      required: [statusCode, error, message]
+      properties:
+        statusCode: { type: integer }
+        error: { type: string }
+        message: { type: string }
+    StorageMode:
+      type: string
+      enum: [local_only, sync]
+    DailyMemoColor:
+      type: string
+      enum: [red, orange, yellow, green, blue, navy, purple, white, black]
+    Folder:
+      type: object
+      properties:
+        id: { type: string }
+        userId: { type: string }
+        name: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Person:
+      type: object
+      required: [id, folderId, name]
+      properties:
+        id: { type: string }
+        folderId: { type: string }
+        name: { type: string }
+        phone: { type: [string, 'null'] }
+        memo: { type: [string, 'null'] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    RelationshipEdge:
+      type: object
+      properties:
+        id: { type: string }
+        folderId: { type: string }
+        fromPersonId: { type: string }
+        toPersonId: { type: string }
+        title: { type: string }
+        memo: { type: [string, 'null'] }
+        categories:
+          type: array
+          items: { type: string }
+    DailyMemo:
+      type: object
+      properties:
+        id: { type: string }
+        memoDate: { type: string, format: date }
+        content: { type: string }
+        color: { $ref: '#/components/schemas/DailyMemoColor' }
+        intensity: { type: integer, minimum: 1, maximum: 5 }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Setting:
+      type: object
+      properties:
+        storageMode: { $ref: '#/components/schemas/StorageMode' }
+        fontFamily: { type: [string, 'null'] }
+        fontFileUrl: { type: [string, 'null'], format: uri }
+security:
+  - bearerAuth: []
+paths:
+  /auth/google:
+    post:
+      security: []
+      summary: Authenticate with Google OAuth ID token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idToken]
+              properties:
+                idToken: { type: string }
+      responses:
+        '200':
+          description: Signed in.
+  /folders:
+    get:
+      summary: List folders for the current user.
+      responses:
+        '200':
+          description: Folder list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Folder' }
+    post:
+      summary: Create folder.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+      responses:
+        '201': { description: Created }
+  /folders/{folderId}/people:
+    parameters:
+      - in: path
+        name: folderId
+        required: true
+        schema: { type: string }
+    get:
+      summary: List people in folder scope only.
+      responses:
+        '200':
+          description: People list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Person' }
+    post:
+      summary: Create person.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, minLength: 1 }
+                phone: { type: [string, 'null'] }
+                memo: { type: [string, 'null'] }
+      responses:
+        '201': { description: Created }
+  /folders/{folderId}/people/{personId}:
+    parameters:
+      - in: path
+        name: folderId
+        required: true
+        schema: { type: string }
+      - in: path
+        name: personId
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get person inside folder scope.
+      responses:
+        '200': { description: Person detail }
+    patch:
+      summary: Update person.
+      responses:
+        '200': { description: Updated }
+    delete:
+      summary: Delete person.
+      responses:
+        '204': { description: Deleted }
+  /folders/{folderId}/relationships:
+    post:
+      summary: Create a directed relationship edge.
+      parameters:
+        - in: path
+          name: folderId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fromPersonId, toPersonId, title]
+              properties:
+                fromPersonId: { type: string }
+                toPersonId: { type: string }
+                title: { type: string }
+                memo: { type: [string, 'null'] }
+                categories:
+                  type: array
+                  items: { type: string }
+      responses:
+        '201': { description: Created }
+  /folders/{folderId}/relationships/search:
+    get:
+      summary: Search directed edges inside a single folder.
+      parameters:
+        - in: path
+          name: folderId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: fromPersonId
+          schema: { type: string }
+        - in: query
+          name: toPersonId
+          schema: { type: string }
+        - in: query
+          name: category
+          schema: { type: string }
+        - in: query
+          name: q
+          schema: { type: string }
+      responses:
+        '200': { description: Relationship list }
+  /folders/{folderId}/pathways:
+    get:
+      summary: Simple path search in a directed multigraph.
+      parameters:
+        - in: path
+          name: folderId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: sourceId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: targetId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: depth
+          required: true
+          schema: { type: integer, minimum: 0, maximum: 8 }
+      responses:
+        '200': { description: Pathways JSON graph }
+  /folders/{folderId}/search/people:
+    get:
+      summary: Search people by name, phone, memo, and relationship category.
+      parameters:
+        - in: path
+          name: folderId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: category
+          schema: { type: string }
+      responses:
+        '200': { description: Search results }
+  /daily-memos:
+    post:
+      summary: Upsert daily memo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, content, color, intensity]
+              properties:
+                date: { type: string, format: date }
+                content: { type: string }
+                color: { $ref: '#/components/schemas/DailyMemoColor' }
+                intensity: { type: integer, minimum: 1, maximum: 5 }
+      responses:
+        '200': { description: Memo upserted }
+    get:
+      summary: Get daily memo by date.
+      parameters:
+        - in: query
+          name: date
+          required: true
+          schema: { type: string, format: date }
+      responses:
+        '200': { description: Memo detail }
+  /daily-memos/search:
+    get:
+      summary: Search daily memos.
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+      responses:
+        '200': { description: Search results }
+  /settings:
+    get:
+      summary: Get user settings.
+      responses:
+        '200': { description: Settings detail }
+    patch:
+      summary: Update user settings.
+      responses:
+        '200': { description: Updated }
+  /settings/fonts:
+    get:
+      summary: List built-in fonts.
+      responses:
+        '200': { description: Font list }
+  /settings/fonts/upload:
+    post:
+      summary: Upload a .ttf or .otf font.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200': { description: Upload result }
+  /export/full:
+    get:
+      summary: Export all user-owned data.
+      responses:
+        '200': { description: Full export payload }
