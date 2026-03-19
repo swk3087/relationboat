@@ -5,6 +5,11 @@ on:
     tags:
       - 'v*'
 
+env:
+  ANDROID_API_LEVEL: '36'
+  ANDROID_BUILD_TOOLS: '36.0.0'
+  GRADLE_VERSION: '9.3.1'
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -19,8 +24,21 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: gradle
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses >/dev/null
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-${ANDROID_API_LEVEL}" \
+            "build-tools;${ANDROID_BUILD_TOOLS}"
+      - name: Write CI local.properties
+        run: echo "sdk.dir=${ANDROID_SDK_ROOT}" > local.properties
       - name: Restore keystore
         if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
         run: |
@@ -29,11 +47,10 @@ jobs:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
       - name: Build release bundle
         run: |
-          chmod +x ./gradlew
           if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
-            ./gradlew bundleRelease
+            gradle bundleRelease
           else
-            ./gradlew assembleRelease
+            gradle assembleRelease
           fi
       - name: Upload release outputs
         uses: actions/upload-artifact@v4

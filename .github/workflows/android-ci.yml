@@ -5,6 +5,11 @@ on:
     branches: [main, develop]
   pull_request:
 
+env:
+  ANDROID_API_LEVEL: '36'
+  ANDROID_BUILD_TOOLS: '36.0.0'
+  GRADLE_VERSION: '9.3.1'
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,14 +24,25 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: gradle
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-      - name: Grant execute permission
-        run: chmod +x ./gradlew
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses >/dev/null
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-${ANDROID_API_LEVEL}" \
+            "build-tools;${ANDROID_BUILD_TOOLS}"
+      - name: Write CI local.properties
+        run: echo "sdk.dir=${ANDROID_SDK_ROOT}" > local.properties
       - name: Assemble debug APK
-        run: ./gradlew assembleDebug
+        run: gradle assembleDebug
       - name: Lint
-        run: ./gradlew lint
+        run: gradle lint
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
