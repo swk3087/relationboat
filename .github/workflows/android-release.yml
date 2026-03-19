@@ -1,0 +1,44 @@
+name: Android Release Draft
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Restore keystore
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > release.keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      - name: Build release bundle
+        run: |
+          chmod +x ./gradlew
+          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            ./gradlew bundleRelease
+          else
+            ./gradlew assembleRelease
+          fi
+      - name: Upload release outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: relationboat-release
+          path: |
+            android/app/build/outputs/apk/release/*
+            android/app/build/outputs/bundle/release/*
