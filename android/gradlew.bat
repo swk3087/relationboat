@@ -1,7 +1,7 @@
 @echo off
 setlocal
 set APP_HOME=%~dp0
-set GRADLE_VERSION=9.1.0
+set GRADLE_VERSION=9.3.1
 set DIST_NAME=gradle-%GRADLE_VERSION%-bin.zip
 set DIST_URL=https://services.gradle.org/distributions/%DIST_NAME%
 set CACHE_ROOT=%USERPROFILE%\.gradle\wrapper\dists\gradle-%GRADLE_VERSION%-bin\text-bootstrap
