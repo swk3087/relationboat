@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum StorageMode {
+  local_only
+  sync
+}
+
+enum DailyMemoColor {
+  red
+  orange
+  yellow
+  green
+  blue
+  navy
+  purple
+  white
+  black
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String
+  avatarUrl     String?
+  googleSub     String?        @unique
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  folders       Folder[]
+  dailyMemos    DailyMemo[]
+  settings      Setting?
+  syncAccounts  SyncAccount[]
+  refreshTokens RefreshToken[]
+}
+
+model Folder {
+  id           String             @id @default(cuid())
+  userId       String
+  name         String
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  people       Person[]
+  relationships RelationshipEdge[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model Person {
+  id         String   @id @default(cuid())
+  folderId    String
+  name       String
+  phone      String?
+  memo       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  folder     Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  outgoingRelationships RelationshipEdge[] @relation("RelationshipFrom")
+  incomingRelationships RelationshipEdge[] @relation("RelationshipTo")
+
+  @@index([folderId, name])
+  @@index([folderId, phone])
+}
+
+model RelationshipEdge {
+  id            String                     @id @default(cuid())
+  folderId       String
+  fromPersonId   String
+  toPersonId     String
+  title         String
+  memo          String?
+  allowSelfLoop Boolean                    @default(false)
+  createdAt     DateTime                   @default(now())
+  updatedAt     DateTime                   @updatedAt
+  folder        Folder                     @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  fromPerson    Person                     @relation("RelationshipFrom", fields: [fromPersonId], references: [id], onDelete: Cascade)
+  toPerson      Person                     @relation("RelationshipTo", fields: [toPersonId], references: [id], onDelete: Cascade)
+  categories    RelationshipEdgeCategory[]
+
+  @@index([folderId, fromPersonId])
+  @@index([folderId, toPersonId])
+  @@index([folderId, title])
+}
+
+model RelationshipEdgeCategory {
+  id                 String           @id @default(cuid())
+  relationshipEdgeId String
+  category           String
+  relationshipEdge   RelationshipEdge @relation(fields: [relationshipEdgeId], references: [id], onDelete: Cascade)
+
+  @@unique([relationshipEdgeId, category])
+  @@index([category])
+}
+
+model DailyMemo {
+  id         String         @id @default(cuid())
+  userId      String
+  memoDate   DateTime
+  content    String
+  color      DailyMemoColor
+  intensity  Int
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, memoDate])
+  @@index([userId, memoDate])
+}
+
+model Setting {
+  id           String      @id @default(cuid())
+  userId        String      @unique
+  storageMode  StorageMode @default(local_only)
+  fontFamily   String?
+  fontFileUrl  String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SyncAccount {
+  id                 String   @id @default(cuid())
+  userId              String
+  provider           String
+  providerAccountId  String
+  accessToken        String?
+  refreshToken       String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model RefreshToken {
+  id         String   @id @default(cuid())
+  userId      String
+  token      String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
