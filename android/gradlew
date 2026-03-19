@@ -1,23 +1,69 @@
-#!/usr/bin/env sh
+#!/bin/sh
+
 set -eu
 
-APP_HOME=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-GRADLE_VERSION="9.3.1"
-DIST_NAME="gradle-${GRADLE_VERSION}-bin.zip"
-DIST_URL="https://services.gradle.org/distributions/${DIST_NAME}"
-CACHE_ROOT="${GRADLE_USER_HOME:-$HOME/.gradle}/wrapper/dists/gradle-${GRADLE_VERSION}-bin/text-bootstrap"
-ZIP_PATH="$CACHE_ROOT/$DIST_NAME"
-INSTALL_DIR="$CACHE_ROOT/gradle-${GRADLE_VERSION}"
+APP_HOME=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+WRAPPER_PROPERTIES="$APP_HOME/gradle/wrapper/gradle-wrapper.properties"
 
-mkdir -p "$CACHE_ROOT"
-
-if [ ! -x "$INSTALL_DIR/bin/gradle" ]; then
-    if [ ! -f "$ZIP_PATH" ]; then
-        echo "Downloading ${DIST_URL}" >&2
-        curl -fsSL "$DIST_URL" -o "$ZIP_PATH"
-    fi
-    rm -rf "$INSTALL_DIR"
-    unzip -q -o "$ZIP_PATH" -d "$CACHE_ROOT"
+if [ ! -f "$WRAPPER_PROPERTIES" ]; then
+  echo "ERROR: Missing $WRAPPER_PROPERTIES" >&2
+  exit 1
 fi
 
-exec "$INSTALL_DIR/bin/gradle" -p "$APP_HOME" "$@"
+distribution_url=$(sed -n 's/^distributionUrl=//p' "$WRAPPER_PROPERTIES" | head -n 1)
+if [ -z "$distribution_url" ]; then
+  echo "ERROR: distributionUrl is not set in $WRAPPER_PROPERTIES" >&2
+  exit 1
+fi
+
+distribution_url=$(printf '%s' "$distribution_url" | sed 's#\\:#:#g')
+distribution_file=$(basename "$distribution_url")
+distribution_name=${distribution_file%.zip}
+gradle_home="$APP_HOME/.gradle-bootstrap/$distribution_name"
+gradle_bin="$gradle_home/bin/gradle"
+
+if [ ! -x "$gradle_bin" ]; then
+  tmp_dir="$APP_HOME/.gradle-bootstrap/tmp"
+  archive_path="$tmp_dir/$distribution_file"
+  extract_dir="$tmp_dir/extract"
+
+  mkdir -p "$tmp_dir"
+  rm -rf "$extract_dir"
+  mkdir -p "$extract_dir"
+
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL "$distribution_url" -o "$archive_path"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -qO "$archive_path" "$distribution_url"
+  else
+    echo "ERROR: curl or wget is required to download Gradle." >&2
+    exit 1
+  fi
+
+  if command -v unzip >/dev/null 2>&1; then
+    unzip -q "$archive_path" -d "$extract_dir"
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 - "$archive_path" "$extract_dir" <<'PY'
+import sys
+import zipfile
+
+archive_path, extract_dir = sys.argv[1:3]
+with zipfile.ZipFile(archive_path) as archive:
+    archive.extractall(extract_dir)
+PY
+  else
+    echo "ERROR: unzip or python3 is required to extract Gradle." >&2
+    exit 1
+  fi
+
+  extracted_home=$(find "$extract_dir" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+  if [ -z "$extracted_home" ]; then
+    echo "ERROR: Failed to extract Gradle distribution." >&2
+    exit 1
+  fi
+
+  rm -rf "$gradle_home"
+  mv "$extracted_home" "$gradle_home"
+fi
+
+exec "$gradle_bin" "$@"

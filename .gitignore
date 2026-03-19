@@ -1,4 +1,5 @@
 android/.gradle/
+android/.gradle-bootstrap/
 android/local.properties
 android/app/build/
 android/build/

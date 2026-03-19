@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
   release:
@@ -21,6 +22,8 @@ jobs:
           cache: gradle
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+      - name: Install Android SDK packages
+        run: sdkmanager --install "platform-tools" "platforms;android-36" "build-tools;36.0.0"
       - name: Restore keystore
         if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
         run: |
@@ -31,9 +34,9 @@ jobs:
         run: |
           chmod +x ./gradlew
           if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
-            ./gradlew bundleRelease
+            ./gradlew --no-daemon bundleRelease
           else
-            ./gradlew assembleRelease
+            ./gradlew --no-daemon assembleRelease
           fi
       - name: Upload release outputs
         uses: actions/upload-artifact@v4

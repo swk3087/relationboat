@@ -4,6 +4,7 @@ on:
   push:
     branches: [main, develop]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -21,12 +22,14 @@ jobs:
           cache: gradle
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+      - name: Install Android SDK packages
+        run: sdkmanager --install "platform-tools" "platforms;android-36" "build-tools;36.0.0"
       - name: Grant execute permission
         run: chmod +x ./gradlew
       - name: Assemble debug APK
-        run: ./gradlew assembleDebug
+        run: ./gradlew --no-daemon assembleDebug
       - name: Lint
-        run: ./gradlew lint
+        run: ./gradlew --no-daemon lint
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
