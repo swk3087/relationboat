@@ -1,7 +1,7 @@
 # Android ↔ Server Compatibility Checklist
 
 - Package/applicationId: `kr.kro.relationboat.app`
-- Base URL: `https://relationboat.kro.kr/api/v1`
+- Base URL: `https://relationboat.kro.kr:4000/api/v1`
 - Storage mode values: `LOCAL_ONLY`, `SYNC`
 - Daily memo editable window: today + tomorrow only in local UI, but server response remains source of truth.
 - Relationship path depth range: `0..8`

@@ -4,8 +4,10 @@ Fastify + TypeScript + Prisma + PostgreSQL backend scaffold for `relationboat.kr
 
 ## Highlights
 - API prefix fixed at `/api/v1`.
+- Default runtime port is `4000` for both local and domain binding.
 - Google OAuth 2.0 sign-in (`POST /api/v1/auth/google`) with JWT access/refresh token pair.
 - Folder-scoped people, relationships, path search, daily memo, settings, font upload, and full export APIs.
+- VCF/vCard import API: `POST /api/v1/folders/{folderId}/contacts/import`.
 - OpenAPI contract maintained in `openapi.yaml` for Android DTO generation.
 
 ## Search/index strategy

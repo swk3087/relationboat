@@ -1,8 +1,10 @@
+import { badRequest } from '../lib/app-error.js';
+
 export const startOfUtcDay = (value: Date): Date => new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()));
 
 export const parseDateOnly = (value: string): Date => {
   const match = /^\d{4}-\d{2}-\d{2}$/.test(value);
-  if (!match) throw new Error('Expected date format YYYY-MM-DD');
+  if (!match) throw badRequest('Expected date format YYYY-MM-DD');
   return new Date(`${value}T00:00:00.000Z`);
 };
 

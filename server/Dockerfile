@@ -18,5 +18,5 @@ COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/openapi.yaml ./openapi.yaml
 COPY --from=build /app/uploads ./uploads
 COPY package.json ./package.json
-EXPOSE 3000
+EXPOSE 4000
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]
