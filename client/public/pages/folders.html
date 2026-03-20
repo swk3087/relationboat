@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f766e" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>RelationBoat - 폴더</title>
+  </head>
+  <body>
+    <div class="mobile-shell" id="app">
+      <header class="topbar">
+        <h1>폴더 관리</h1>
+        <p>폴더를 생성하고 사람/관계 화면으로 이동합니다.</p>
+      </header>
+
+      <main class="screen">
+        <section class="card">
+          <h2>새 폴더 생성</h2>
+          <form id="create-folder-form" class="stack">
+            <label>
+              폴더 이름
+              <input name="name" type="text" placeholder="예: 초등 동창" required />
+            </label>
+            <button type="submit">폴더 추가</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2>폴더 목록</h2>
+          <div id="folder-list" class="list"></div>
+        </section>
+
+        <section class="card">
+          <button id="logout-button" class="danger" type="button">로그아웃</button>
+          <p class="helper">세션은 서버 메모리에만 보관되며 브라우저 로컬 스토리지에 저장하지 않습니다.</p>
+        </section>
+
+        <p id="message" class="alert hidden"></p>
+      </main>
+    </div>
+
+    <script type="module" src="/js/folders.js"></script>
+  </body>
+</html>

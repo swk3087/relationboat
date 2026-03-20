@@ -1,7 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import { prisma } from '../lib/prisma.js';
 
-const storageModes = ['local_only', 'sync'] as const;
+const storageModes = ['sync'] as const;
 type StorageMode = (typeof storageModes)[number];
 
 const defaultFonts = [
@@ -15,8 +15,16 @@ const settingsRoutes: FastifyPluginAsync = async (app) => {
     const settings = await prisma.setting.upsert({
       where: { userId: request.authUser.userId },
       update: {},
-      create: { userId: request.authUser.userId },
+      create: { userId: request.authUser.userId, storageMode: 'sync' },
     });
+
+    if (settings.storageMode !== 'sync') {
+      const forced = await prisma.setting.update({
+        where: { userId: request.authUser.userId },
+        data: { storageMode: 'sync' },
+      });
+      return { ...forced, defaultFonts };
+    }
 
     return { ...settings, defaultFonts };
   });
@@ -30,13 +38,13 @@ const settingsRoutes: FastifyPluginAsync = async (app) => {
     return prisma.setting.upsert({
       where: { userId: request.authUser.userId },
       update: {
-        storageMode: body.storageMode,
+        storageMode: 'sync',
         fontFamily: body.fontFamily === undefined ? undefined : body.fontFamily?.trim() || null,
         fontFileUrl: body.fontFileUrl === undefined ? undefined : body.fontFileUrl?.trim() || null,
       },
       create: {
         userId: request.authUser.userId,
-        storageMode: body.storageMode,
+        storageMode: 'sync',
         fontFamily: body.fontFamily?.trim() || null,
         fontFileUrl: body.fontFileUrl?.trim() || null,
       },

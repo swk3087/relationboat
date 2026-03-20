@@ -28,5 +28,5 @@ export const config = {
   googleRedirectUriProd: process.env.GOOGLE_REDIRECT_URI_PROD ?? 'https://relationboat.kro.kr:4000/api/v1/auth/google/callback',
   fileStorageRoot: path.resolve(root, process.env.FILE_STORAGE_ROOT ?? './uploads'),
   fontBaseUrl: process.env.FONT_BASE_URL ?? 'http://localhost:4000/uploads/fonts',
-  defaultStorageMode: (process.env.DEFAULT_STORAGE_MODE ?? 'local_only') as 'local_only' | 'sync',
+  defaultStorageMode: (process.env.DEFAULT_STORAGE_MODE ?? 'sync') as 'local_only' | 'sync',
 };

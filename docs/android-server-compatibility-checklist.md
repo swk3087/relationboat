@@ -2,7 +2,7 @@
 
 - Package/applicationId: `kr.kro.relationboat.app`
 - Base URL: `https://relationboat.kro.kr:4000/api/v1`
-- Storage mode values: `LOCAL_ONLY`, `SYNC`
+- Storage mode values: `SYNC` only (server storage mandatory)
 - Daily memo editable window: today + tomorrow only in local UI, but server response remains source of truth.
 - Relationship path depth range: `0..8`
 - Folder isolation: person records are always tied to a `folderId`.

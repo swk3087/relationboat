@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f766e" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>RelationBoat Login</title>
+  </head>
+  <body>
+    <main class="login-wrap">
+      <section class="login-card">
+        <span class="badge">RelationBoat Web App</span>
+        <h1>Google 로그인</h1>
+        <p>
+          Android 기능을 웹으로 이전한 클라이언트입니다. 로그인 후 데이터는 브라우저 로컬이 아닌 서버 API에만 저장됩니다.
+        </p>
+        <button id="google-login-button">Google로 시작하기</button>
+        <p id="message" class="alert hidden"></p>
+      </section>
+    </main>
+    <script type="module" src="/js/login.js"></script>
+  </body>
+</html>

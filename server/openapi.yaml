@@ -21,7 +21,7 @@ components:
         message: { type: string }
     StorageMode:
       type: string
-      enum: [local_only, sync]
+      enum: [sync]
     DailyMemoColor:
       type: string
       enum: [red, orange, yellow, green, blue, navy, purple, white, black]

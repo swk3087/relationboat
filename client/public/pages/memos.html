@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f766e" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>RelationBoat - 메모</title>
+  </head>
+  <body>
+    <div class="mobile-shell" id="app">
+      <header class="topbar">
+        <h1>그날의 메모</h1>
+        <p>날짜별 메모를 서버에 저장합니다. 브라우저 로컬에는 저장하지 않습니다.</p>
+      </header>
+
+      <main class="screen">
+        <section class="card">
+          <h2>메모 작성</h2>
+          <form id="memo-form" class="stack">
+            <label>
+              날짜
+              <input id="memo-date" type="date" required />
+            </label>
+            <label>
+              색상
+              <select id="memo-color"></select>
+            </label>
+            <label>
+              중요도 <strong id="memo-intensity-label">3</strong>
+              <input id="memo-intensity" type="range" min="1" max="5" value="3" />
+            </label>
+            <label>
+              내용
+              <textarea id="memo-content" required></textarea>
+            </label>
+            <button type="submit">메모 저장</button>
+          </form>
+        </section>
+
+        <p id="message" class="alert hidden"></p>
+      </main>
+    </div>
+
+    <script type="module" src="/js/memos.js"></script>
+  </body>
+</html>
