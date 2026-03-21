@@ -26,6 +26,18 @@ const parseJsonSafely = async (response) => {
   }
 };
 
+const fetchBackend = async (url, init) => {
+  try {
+    return await fetch(url, init);
+  } catch (error) {
+    throw new BackendHttpError(502, 'Backend service is unavailable', {
+      message: '백엔드 서버에 연결할 수 없습니다.',
+      detail: error instanceof Error ? error.message : String(error),
+      url,
+    });
+  }
+};
+
 const hasContentType = (headers) =>
   Object.keys(headers).some((key) => key.toLowerCase() === 'content-type');
 
@@ -75,7 +87,7 @@ const buildRequestInit = ({ method, session, headers = {}, body }) => {
 export const refreshAccessToken = async (session) => {
   if (!session?.refreshToken) return false;
 
-  const response = await fetch(toUrl('auth/refresh'), {
+  const response = await fetchBackend(toUrl('auth/refresh'), {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${session.refreshToken}`,
@@ -93,7 +105,7 @@ export const refreshAccessToken = async (session) => {
 };
 
 export const requestBackend = async ({ method = 'GET', path, session, body, headers, tryRefresh = true }) => {
-  const response = await fetch(toUrl(path), buildRequestInit({ method, session, headers, body }));
+  const response = await fetchBackend(toUrl(path), buildRequestInit({ method, session, headers, body }));
 
   if (response.status === 401 && tryRefresh && session) {
     const refreshed = await refreshAccessToken(session);

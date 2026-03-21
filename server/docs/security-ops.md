@@ -22,9 +22,10 @@
 ## Font upload validation
 - Only `.ttf` and `.otf` uploads are accepted.
 - MIME type and file extension are both validated before storing the file.
-- Font uploads are stored under `uploads/fonts` so reverse proxies can serve them from `https://relationboat.kro.kr:4000/uploads/fonts/*`.
+- Font uploads are stored under `uploads/fonts` so reverse proxies can serve them from `https://relationboat.kro.kr/uploads/fonts/*`.
 
 ## Reverse proxy notes
 - Forward `/api/` and `/uploads/` to the Fastify container.
-- Terminate TLS at the reverse proxy for `relationboat.kro.kr` and forward port `4000` to the Fastify service.
+- Terminate TLS at the reverse proxy for `relationboat.kro.kr` and expose the public backend as `https://relationboat.kro.kr` even if the Fastify container listens on port `4000` internally.
+- Allow CORS from the public client origin `https://app.relationboat.kro.kr`.
 - Preserve the `Authorization` header for Google-authenticated API requests.

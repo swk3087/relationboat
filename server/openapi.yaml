@@ -3,7 +3,7 @@ info:
   title: RelationBoat API
   version: 0.1.0
 servers:
-  - url: https://relationboat.kro.kr:4000/api/v1
+  - url: https://relationboat.kro.kr/api/v1
   - url: http://localhost:4000/api/v1
 components:
   securitySchemes:
