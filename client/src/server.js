@@ -8,7 +8,7 @@ import {
   refreshAccessToken,
   BackendHttpError,
 } from './backend-client.js';
-import { config } from './config.js';
+import { config, inferBackendBaseUrl } from './config.js';
 import { createSessionStore } from './session-store.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -81,11 +81,13 @@ const sendPage = (name) => (req, res) => {
 };
 
 const proxyJson = async ({ req, res, method, path: backendPath, body }) => {
+  const baseUrl = inferBackendBaseUrl(req);
   const payload = await requestBackend({
     method,
     path: backendPath,
     session: req.session,
     body,
+    baseUrl,
   });
 
   if (payload === null) {
@@ -102,7 +104,7 @@ app.post('/api/auth/google', asyncRoute(async (req, res) => {
     return res.status(400).json({ message: 'idToken is required' });
   }
 
-  const payload = await loginWithGoogleIdToken(idToken);
+  const payload = await loginWithGoogleIdToken(idToken, inferBackendBaseUrl(req));
   const sessionId = sessionStore.create({
     accessToken: payload.tokens.accessToken,
     refreshToken: payload.tokens.refreshToken,
@@ -204,7 +206,8 @@ app.post('/api/folders/:folderId/contacts/import', requireSession, asyncRoute(as
     return res.status(400).json({ message: 'multipart/form-data 형식의 VCF 파일이 필요합니다.' });
   }
 
-  await refreshAccessToken(req.session);
+  const baseUrl = inferBackendBaseUrl(req);
+  await refreshAccessToken(req.session, baseUrl);
 
   const payload = await requestBackend({
     method: 'POST',
@@ -213,6 +216,7 @@ app.post('/api/folders/:folderId/contacts/import', requireSession, asyncRoute(as
     headers: { 'Content-Type': contentType },
     body: req,
     tryRefresh: false,
+    baseUrl,
   });
 
   return res.json(payload);
