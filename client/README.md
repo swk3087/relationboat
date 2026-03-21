@@ -24,10 +24,13 @@
 
 ```bash
 cd client
-cp .env.example .env
 npm install
 npm run dev
 ```
+
+- `.env` 없이 실행하면 `localhost:5000`으로 접속한 요청은 `http://localhost:4000/api/v1` 백엔드로 프록시합니다.
+- Caddy 뒤에서 `https://app.relationboat.kro.kr`로 들어온 요청은 `https://relationboat.kro.kr/api/v1`를 자동으로 사용합니다.
+- 운영에서 주소를 강제로 고정하려면 그때만 `APP_DOMAIN`, `BACKEND_BASE_URL`을 설정하면 됩니다.
 
 ## Firebase + Google 로그인 연결 방법
 
@@ -74,6 +77,6 @@ npm run dev
 `client/.env.example` 참고:
 
 - `PORT=5000`
-- `APP_DOMAIN=app.relationboat.kro.kr:5000` (운영에서는 `app.relationboat.kro.kr`)
-- `BACKEND_BASE_URL=http://relationboat.kro.kr:4000/api/v1` (운영에서는 `https://relationboat.kro.kr/api/v1`)
+- `APP_DOMAIN=app.relationboat.kro.kr` (로컬 기본값은 `localhost:5000`)
+- `BACKEND_BASE_URL=https://relationboat.kro.kr/api/v1` (로컬 요청은 미설정 시 `http://localhost:4000/api/v1` 자동 선택)
 - `COOKIE_SECURE=false` (운영에서는 `true` 권장)

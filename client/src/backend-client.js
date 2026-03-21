@@ -9,8 +9,8 @@ export class BackendHttpError extends Error {
   }
 }
 
-const toUrl = (path) => {
-  const normalizedBase = config.backendBaseUrl.endsWith('/') ? config.backendBaseUrl : `${config.backendBaseUrl}/`;
+const toUrl = (path, baseUrl = config.backendBaseUrl) => {
+  const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
   const safePath = path.startsWith('/') ? path.slice(1) : path;
   return new URL(safePath, normalizedBase).toString();
 };
@@ -84,10 +84,10 @@ const buildRequestInit = ({ method, session, headers = {}, body }) => {
   return requestInit;
 };
 
-export const refreshAccessToken = async (session) => {
+export const refreshAccessToken = async (session, baseUrl) => {
   if (!session?.refreshToken) return false;
 
-  const response = await fetchBackend(toUrl('auth/refresh'), {
+  const response = await fetchBackend(toUrl('auth/refresh', baseUrl), {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${session.refreshToken}`,
@@ -104,13 +104,13 @@ export const refreshAccessToken = async (session) => {
   return true;
 };
 
-export const requestBackend = async ({ method = 'GET', path, session, body, headers, tryRefresh = true }) => {
-  const response = await fetchBackend(toUrl(path), buildRequestInit({ method, session, headers, body }));
+export const requestBackend = async ({ method = 'GET', path, session, body, headers, tryRefresh = true, baseUrl }) => {
+  const response = await fetchBackend(toUrl(path, baseUrl), buildRequestInit({ method, session, headers, body }));
 
   if (response.status === 401 && tryRefresh && session) {
-    const refreshed = await refreshAccessToken(session);
+    const refreshed = await refreshAccessToken(session, baseUrl);
     if (refreshed) {
-      return requestBackend({ method, path, session, body, headers, tryRefresh: false });
+      return requestBackend({ method, path, session, body, headers, tryRefresh: false, baseUrl });
     }
   }
 
@@ -126,13 +126,14 @@ export const requestBackend = async ({ method = 'GET', path, session, body, head
   return payload;
 };
 
-export const loginWithGoogleIdToken = async (idToken) => {
+export const loginWithGoogleIdToken = async (idToken, baseUrl) => {
   const payload = await requestBackend({
     method: 'POST',
     path: 'auth/google',
     body: { idToken },
     session: null,
     tryRefresh: false,
+    baseUrl,
   });
 
   if (!payload?.tokens?.accessToken || !payload?.tokens?.refreshToken) {
