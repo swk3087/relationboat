@@ -20,47 +20,15 @@ const isLocalHost = (value) => {
 };
 
 const normalizeForwardedValue = (value) => value?.split(',')[0]?.trim() ?? '';
-const parseUrlSafely = (value) => {
-  try {
-    return new URL(value);
-  } catch {
-    return null;
-  }
-};
-
-const toPublicBackendHost = (requestHost) => {
-  if (!requestHost || isLocalHost(requestHost)) {
-    return '';
-  }
-
-  const hostname = requestHost.replace(/:\d+$/, '');
-  return hostname === PUBLIC_APP_DOMAIN ? 'relationboat.kro.kr' : hostname.startsWith('app.') ? hostname.slice(4) : hostname;
-};
-
-const shouldUseConfiguredBackendBaseUrl = (backendBaseUrl, requestHost) => {
-  if (!backendBaseUrl) return false;
-
-  if (!requestHost || isLocalHost(requestHost)) {
-    return true;
-  }
-
-  const parsed = parseUrlSafely(backendBaseUrl);
-  if (!parsed) {
-    return true;
-  }
-
-  const publicBackendHost = toPublicBackendHost(requestHost);
-  return !(parsed.port === '4000' && parsed.hostname === publicBackendHost);
-};
 
 export const inferBackendBaseUrl = (req) => {
+  if (process.env.BACKEND_BASE_URL) {
+    return process.env.BACKEND_BASE_URL;
+  }
+
   const forwardedHost = normalizeForwardedValue(req?.get?.('x-forwarded-host'));
   const hostHeader = normalizeForwardedValue(req?.get?.('host'));
   const host = (forwardedHost || hostHeader).toLowerCase();
-
-  if (shouldUseConfiguredBackendBaseUrl(process.env.BACKEND_BASE_URL, host)) {
-    return process.env.BACKEND_BASE_URL;
-  }
 
   if (!host || isLocalHost(host)) {
     return LOCAL_BACKEND_BASE_URL;
@@ -68,7 +36,8 @@ export const inferBackendBaseUrl = (req) => {
 
   const forwardedProto = normalizeForwardedValue(req?.get?.('x-forwarded-proto')).toLowerCase();
   const protocol = forwardedProto || 'https';
-  const backendHost = toPublicBackendHost(host);
+  const hostname = host.replace(/:\d+$/, '');
+  const backendHost = hostname === PUBLIC_APP_DOMAIN ? 'relationboat.kro.kr' : hostname.startsWith('app.') ? hostname.slice(4) : hostname;
   return `${protocol}://${backendHost}/api/v1`;
 };
 
