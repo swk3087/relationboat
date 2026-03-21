@@ -39,7 +39,13 @@ const setup = async () => {
 
     try {
       const result = await signInWithPopup(auth, provider);
-      const idToken = await result.user.getIdToken();
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const idToken = credential?.idToken;
+
+      if (!idToken) {
+        throw new Error('Google ID 토큰을 가져오지 못했습니다. 다시 시도해주세요.');
+      }
+
       await apiRequest('/api/auth/google', {
         method: 'POST',
         body: { idToken },

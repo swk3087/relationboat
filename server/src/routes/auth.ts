@@ -2,6 +2,7 @@ import { FastifyPluginAsync } from 'fastify';
 import { prisma } from '../lib/prisma.js';
 import { verifyGoogleIdToken } from '../lib/google.js';
 import { issueTokenPair, verifyRefreshToken } from '../lib/auth.js';
+import { unauthorized } from '../lib/app-error.js';
 
 const authRoutes: FastifyPluginAsync = async (app) => {
   app.post('/auth/google', async (request, reply) => {
@@ -10,7 +11,12 @@ const authRoutes: FastifyPluginAsync = async (app) => {
       return reply.badRequest('idToken is required');
     }
 
-    const profile = await verifyGoogleIdToken(body.idToken);
+    let profile;
+    try {
+      profile = await verifyGoogleIdToken(body.idToken);
+    } catch {
+      throw unauthorized('Invalid Google ID token');
+    }
 
     const user = await prisma.user.upsert({
       where: { email: profile.email },
