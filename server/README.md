@@ -5,7 +5,7 @@ Fastify + TypeScript + Prisma + PostgreSQL backend scaffold for `relationboat.kr
 ## Highlights
 - API prefix fixed at `/api/v1`.
 - Default runtime port is `4000` for both local and domain binding.
-- Google OAuth 2.0 sign-in (`POST /api/v1/auth/google`) with JWT access/refresh token pair.
+- Single-user backend: every API request is mapped to one configured owner account.
 - Folder-scoped people, relationships, path search, daily memo, settings, font upload, and full export APIs.
 - VCF/vCard import API: `POST /api/v1/folders/{folderId}/contacts/import`.
 - OpenAPI contract maintained in `openapi.yaml` for Android DTO generation.
@@ -22,3 +22,9 @@ npm install
 npx prisma generate
 npm run dev
 ```
+
+## Single-user mode
+
+- `SINGLE_USER_EMAIL` 기준으로 단일 사용자 레코드를 자동 생성/재사용합니다.
+- `SINGLE_USER_NAME`은 표시용 이름입니다.
+- 별도 Google OAuth, JWT 로그인, refresh token 발급 없이 모든 API가 같은 사용자 데이터에 접근합니다.

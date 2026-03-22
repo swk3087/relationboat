@@ -1,13 +1,9 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import crypto from 'node:crypto';
 import express from 'express';
 import cookieParser from 'cookie-parser';
-import {
-  requestBackend,
-  loginWithGoogleIdToken,
-  refreshAccessToken,
-  BackendHttpError,
-} from './backend-client.js';
+import { requestBackend, BackendHttpError } from './backend-client.js';
 import { config, inferBackendBaseUrl } from './config.js';
 import { createSessionStore } from './session-store.js';
 
@@ -18,6 +14,17 @@ const pagesDir = path.join(publicDir, 'pages');
 
 const app = express();
 const sessionStore = createSessionStore(config.sessionTtlMs);
+
+const passwordsMatch = (providedPassword) => {
+  const expected = Buffer.from(config.appPassword);
+  const actual = Buffer.from(providedPassword ?? '');
+
+  if (expected.length !== actual.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(expected, actual);
+};
 
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -50,8 +57,8 @@ const asyncRoute = (handler) => (req, res, next) => {
 };
 
 const requireSession = (req, res, next) => {
-  if (!req.session) {
-    return res.status(401).json({ message: '로그인이 필요합니다.' });
+  if (!req.session?.authenticated) {
+    return res.status(401).json({ message: '비밀번호 인증이 필요합니다.' });
   }
   return next();
 };
@@ -80,13 +87,13 @@ const sendPage = (name) => (req, res) => {
   res.sendFile(path.join(pagesDir, `${name}.html`));
 };
 
-const proxyJson = async ({ req, res, method, path: backendPath, body }) => {
+const proxyJson = async ({ req, res, method, path: backendPath, body, headers }) => {
   const baseUrl = inferBackendBaseUrl(req);
   const payload = await requestBackend({
     method,
     path: backendPath,
-    session: req.session,
     body,
+    headers,
     baseUrl,
   });
 
@@ -98,19 +105,17 @@ const proxyJson = async ({ req, res, method, path: backendPath, body }) => {
   res.json(payload);
 };
 
-app.post('/api/auth/google', asyncRoute(async (req, res) => {
-  const { idToken } = req.body ?? {};
-  if (!idToken || typeof idToken !== 'string') {
-    return res.status(400).json({ message: 'idToken is required' });
+app.post('/api/auth/login', asyncRoute(async (req, res) => {
+  const { password } = req.body ?? {};
+  if (typeof password !== 'string' || password.length === 0) {
+    return res.status(400).json({ message: 'password is required' });
   }
 
-  const payload = await loginWithGoogleIdToken(idToken, inferBackendBaseUrl(req));
-  const sessionId = sessionStore.create({
-    accessToken: payload.tokens.accessToken,
-    refreshToken: payload.tokens.refreshToken,
-    user: payload.user,
-  });
+  if (!passwordsMatch(password)) {
+    return res.status(401).json({ message: '비밀번호가 올바르지 않습니다.' });
+  }
 
+  const sessionId = sessionStore.create({ authenticated: true });
   res.cookie(config.cookieName, sessionId, {
     httpOnly: true,
     sameSite: 'lax',
@@ -118,15 +123,15 @@ app.post('/api/auth/google', asyncRoute(async (req, res) => {
     maxAge: config.sessionTtlMs,
   });
 
-  return res.json({ user: payload.user });
+  return res.status(204).end();
 }));
 
 app.get('/api/auth/session', (req, res) => {
-  if (!req.session) {
-    return res.status(401).json({ message: '로그인 세션이 없습니다.' });
+  if (!req.session?.authenticated) {
+    return res.status(401).json({ message: '인증 세션이 없습니다.' });
   }
 
-  return res.json({ user: req.session.user });
+  return res.json({ authenticated: true });
 });
 
 app.post('/api/auth/logout', (req, res) => {
@@ -136,12 +141,6 @@ app.post('/api/auth/logout', (req, res) => {
 
   res.clearCookie(config.cookieName);
   return res.status(204).end();
-});
-
-app.get('/api/firebase/config', (req, res) => {
-  const firebase = { ...config.firebase };
-  const enabled = Object.values(firebase).every((value) => Boolean(value));
-  res.json({ enabled, firebase });
 });
 
 app.get('/api/folders', requireSession, asyncRoute(async (req, res) => {
@@ -206,24 +205,19 @@ app.post('/api/folders/:folderId/contacts/import', requireSession, asyncRoute(as
     return res.status(400).json({ message: 'multipart/form-data 형식의 VCF 파일이 필요합니다.' });
   }
 
-  const baseUrl = inferBackendBaseUrl(req);
-  await refreshAccessToken(req.session, baseUrl);
-
   const payload = await requestBackend({
     method: 'POST',
     path: `folders/${req.params.folderId}/contacts/import`,
-    session: req.session,
     headers: { 'Content-Type': contentType },
     body: req,
-    tryRefresh: false,
-    baseUrl,
+    baseUrl: inferBackendBaseUrl(req),
   });
 
   return res.json(payload);
 }));
 
 app.get('/', (req, res) => {
-  if (req.session) {
+  if (req.session?.authenticated) {
     return res.redirect('/folders');
   }
   return res.redirect('/login');

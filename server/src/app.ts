@@ -6,7 +6,6 @@ import { Prisma } from '@prisma/client';
 import { authPlugin } from './lib/auth.js';
 import { AppError } from './lib/app-error.js';
 import { config } from './lib/config.js';
-import authRoutes from './routes/auth.js';
 import peopleRoutes from './routes/people.js';
 import relationshipRoutes from './routes/relationships.js';
 import dailyMemoRoutes from './routes/daily-memos.js';
@@ -64,8 +63,6 @@ export const buildApp = () => {
     protectedApp.register(fontRoutes);
     protectedApp.register(contactsRoutes);
   }, { prefix: config.apiPrefix });
-
-  app.register(authRoutes, { prefix: config.apiPrefix });
 
   return app;
 };

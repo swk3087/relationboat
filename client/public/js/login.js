@@ -1,9 +1,9 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
 import { apiRequest, showMessage, clearMessage } from './common.js';
 
+const form = document.querySelector('#login-form');
+const passwordInput = document.querySelector('#password');
+const submitButton = document.querySelector('#login-button');
 const message = document.querySelector('#message');
-const loginButton = document.querySelector('#google-login-button');
 
 const goToAppIfLoggedIn = async () => {
   try {
@@ -18,43 +18,23 @@ const goToAppIfLoggedIn = async () => {
 const setup = async () => {
   if (await goToAppIfLoggedIn()) return;
 
-  const firebaseConfigResponse = await apiRequest('/api/firebase/config');
-  if (!firebaseConfigResponse.enabled) {
-    loginButton.disabled = true;
-    showMessage(
-      message,
-      'Firebase 설정값이 비어 있습니다. /client/.env 에 FIREBASE_* 값을 입력 후 서버를 재시작하세요.',
-      'error',
-    );
-    return;
-  }
-
-  const app = initializeApp(firebaseConfigResponse.firebase);
-  const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
-
-  loginButton.addEventListener('click', async () => {
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
     clearMessage(message);
-    loginButton.disabled = true;
+    submitButton.disabled = true;
 
     try {
-      const result = await signInWithPopup(auth, provider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      const idToken = credential?.idToken;
-
-      if (!idToken) {
-        throw new Error('Google ID 토큰을 가져오지 못했습니다. 다시 시도해주세요.');
-      }
-
-      await apiRequest('/api/auth/google', {
+      await apiRequest('/api/auth/login', {
         method: 'POST',
-        body: { idToken },
+        body: { password: passwordInput.value },
       });
 
       window.location.href = '/folders';
     } catch (error) {
-      showMessage(message, error.message || 'Google 로그인에 실패했습니다.', 'error');
-      loginButton.disabled = false;
+      showMessage(message, error.message || '비밀번호 인증에 실패했습니다.', 'error');
+      submitButton.disabled = false;
+      passwordInput.focus();
+      passwordInput.select();
     }
   });
 };
