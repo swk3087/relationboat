@@ -1,0 +1,19 @@
+[Unit]
+Description=RelationBoat NW Single Server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/relationboat/nw
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node dist/server.js
+Restart=always
+RestartSec=3
+User=www-data
+Group=www-data
+NoNewPrivileges=true
+PrivateTmp=true
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

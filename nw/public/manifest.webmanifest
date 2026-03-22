@@ -1,0 +1,11 @@
+{
+  "name": "RelationBoat Client",
+  "short_name": "RelationBoat",
+  "description": "Relationship manager web client ready for PWA migration",
+  "start_url": "/folders",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f2f5f9",
+  "theme_color": "#0f766e"
+}

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f766e" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>RelationBoat Login</title>
+  </head>
+  <body>
+    <main class="login-wrap">
+      <section class="login-card">
+        <span class="badge">RelationBoat Web App</span>
+        <h1>비밀번호 입력</h1>
+        <p>
+          단일 사용자 모드입니다. 클라이언트 `.env`의 `APP_PASSWORD`와 일치하는 비밀번호를 입력하면 앱에 들어갈 수 있습니다.
+        </p>
+        <form id="login-form" class="stack">
+          <label>
+            앱 비밀번호
+            <input id="password" type="password" name="password" autocomplete="current-password" required />
+          </label>
+          <button id="login-button" type="submit">앱 열기</button>
+        </form>
+        <p id="message" class="alert hidden"></p>
+      </section>
+    </main>
+    <script type="module" src="/js/login.js"></script>
+  </body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f766e" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>RelationBoat - 설정</title>
+  </head>
+  <body>
+    <div class="mobile-shell" id="app">
+      <header class="topbar">
+        <h1>설정</h1>
+        <p>저장 모드는 서버 전용(sync)으로 고정됩니다.</p>
+      </header>
+
+      <main class="screen">
+        <section class="card">
+          <h2>앱 설정</h2>
+          <form id="settings-form" class="stack">
+            <label>
+              저장 방식
+              <input id="storage-mode" type="text" value="sync" readonly />
+            </label>
+            <label>
+              폰트 이름
+              <input id="font-family" type="text" placeholder="Pretendard" />
+            </label>
+            <label>
+              커스텀 폰트 URL
+              <input id="font-file-url" type="url" placeholder="https://..." />
+            </label>
+            <button type="submit">설정 저장</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2>기본 폰트 목록</h2>
+          <div id="font-list" class="list"></div>
+        </section>
+
+        <section class="card">
+          <h2>단일 사용자 모드</h2>
+          <p class="helper">
+            Google/Firebase 로그인 없이 동작합니다. 접근 비밀번호는 클라이언트 서버의 `.env`에 있는 `APP_PASSWORD`로 관리합니다.
+          </p>
+          <a href="/login" class="secondary" style="display: inline-block; text-decoration: none; padding: 10px 14px;">비밀번호 입력 화면으로</a>
+        </section>
+
+        <section class="card">
+          <button id="logout-button" class="danger" type="button">로그아웃</button>
+        </section>
+
+        <p id="message" class="alert hidden"></p>
+      </main>
+    </div>
+
+    <script type="module" src="/js/settings.js"></script>
+  </body>
+</html>
