@@ -6,11 +6,6 @@ servers:
   - url: https://relationboat.kro.kr/api/v1
   - url: http://localhost:4000/api/v1
 components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
   schemas:
     Error:
       type: object
@@ -72,25 +67,8 @@ components:
         storageMode: { $ref: '#/components/schemas/StorageMode' }
         fontFamily: { type: [string, 'null'] }
         fontFileUrl: { type: [string, 'null'], format: uri }
-security:
-  - bearerAuth: []
+security: []
 paths:
-  /auth/google:
-    post:
-      security: []
-      summary: Authenticate with Google OAuth ID token.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [idToken]
-              properties:
-                idToken: { type: string }
-      responses:
-        '200':
-          description: Signed in.
   /folders:
     get:
       summary: List folders for the current user.

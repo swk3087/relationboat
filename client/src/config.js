@@ -12,6 +12,14 @@ const parseNumber = (value, fallback) => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+const required = (name) => {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`Missing environment variable: ${name}`);
+  }
+  return value;
+};
+
 const nodeEnv = process.env.NODE_ENV ?? 'development';
 const isProduction = nodeEnv === 'production';
 const isLocalHost = (value) => {
@@ -46,15 +54,8 @@ export const config = {
   port: parseNumber(process.env.PORT, 5000),
   appDomain: process.env.APP_DOMAIN ?? (isProduction ? PUBLIC_APP_DOMAIN : LOCAL_APP_DOMAIN),
   backendBaseUrl: process.env.BACKEND_BASE_URL ?? (isProduction ? PUBLIC_BACKEND_BASE_URL : LOCAL_BACKEND_BASE_URL),
+  appPassword: required('APP_PASSWORD'),
   cookieName: 'rb.sid',
   cookieSecure: (process.env.COOKIE_SECURE ?? (nodeEnv === 'production' ? 'true' : 'false')) === 'true',
   sessionTtlMs: parseNumber(process.env.SESSION_TTL_MS, 1000 * 60 * 60 * 24 * 14),
-  firebase: {
-    apiKey: process.env.FIREBASE_API_KEY ?? '',
-    authDomain: process.env.FIREBASE_AUTH_DOMAIN ?? '',
-    projectId: process.env.FIREBASE_PROJECT_ID ?? '',
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET ?? '',
-    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID ?? '',
-    appId: process.env.FIREBASE_APP_ID ?? '',
-  },
 };

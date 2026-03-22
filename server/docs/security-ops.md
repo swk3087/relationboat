@@ -6,17 +6,17 @@
 - Pathway search loads **only** nodes and edges that already match the requested `folderId`, preventing cross-folder graph traversal.
 
 ## Ownership validation
-- Authentication is mandatory for every `/api/v1/**` route other than `/auth/google` and `/auth/refresh`.
-- The authenticated `userId` is the root ownership key for folders, daily memos, settings, sync accounts, and exports.
+- Every `/api/v1/**` route is handled as the same configured single user.
+- The resolved `userId` is the root ownership key for folders, daily memos, settings, sync accounts, and exports.
 - Export payloads are filtered exclusively by `userId` and embed only folder-scoped records owned by that user.
 
-## Google OAuth 2.0
-- Login requires a Google-issued ID token verified against `GOOGLE_CLIENT_ID`.
-- The first release standardizes on **JWT access token + JWT refresh token**.
-- Redirect URIs are split between development (`GOOGLE_REDIRECT_URI_DEV`) and production (`GOOGLE_REDIRECT_URI_PROD`).
+## Single-user account bootstrap
+- The backend automatically creates or reuses one owner account from `SINGLE_USER_EMAIL`.
+- `SINGLE_USER_NAME` is used as the display name for that owner account.
+- A `settings` row is also ensured for the same user so app settings always resolve.
 
 ## Export encryption
-- Current `GET /export/full` responses are returned as authenticated JSON over HTTPS and are marked `not_applied_server_side` in the payload.
+- Current `GET /export/full` responses are returned as JSON over HTTPS and are marked `not_applied_server_side` in the payload.
 - If encrypted archives are required later, add password-based ZIP/AES export generation before storing or sharing files outside the API.
 
 ## Font upload validation
@@ -28,4 +28,3 @@
 - Forward `/api/` and `/uploads/` to the Fastify container.
 - Terminate TLS at the reverse proxy for `relationboat.kro.kr` and expose the public backend as `https://relationboat.kro.kr` even if the Fastify container listens on port `4000` internally.
 - Allow CORS from the public client origin `https://app.relationboat.kro.kr`.
-- Preserve the `Authorization` header for Google-authenticated API requests.
